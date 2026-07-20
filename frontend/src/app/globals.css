@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #1b1024;
+}
+
+::selection {
+  background-color: #c69749;
+  color: #1b1024;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* أضيفي هاد المقطع بآخر ملف globals.css الموجود عندك (تحت كل شي، ما تحذفي القديم) */
+
+@keyframes shimmer-gold {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.logo-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    #8a6a34 0%,
+    #c69749 25%,
+    #e0b975 50%,
+    #c69749 75%,
+    #8a6a34 100%
+  );
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-gold 4s ease-in-out infinite;
+}
