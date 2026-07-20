@@ -4,7 +4,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { categoryService } from "@/services/category.service";
-import ProductImageUpload from "@/components/products/ProductImageUpload";
+import ProductImageUpload from "@/components/products/ProductGalleryUpload";
 
 const emptyForm = {
   name: "",

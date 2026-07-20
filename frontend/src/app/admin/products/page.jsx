@@ -4,7 +4,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { productService } from "@/services/productService";
-import ProductImageUpload from "@/components/products/ProductImageUpload";
+import ProductImageUpload from "@/components/products/ProductGalleryUpload";
 import ProductGalleryUpload from "@/components/products/ProductGalleryUpload";
 
 const emptyForm = {
