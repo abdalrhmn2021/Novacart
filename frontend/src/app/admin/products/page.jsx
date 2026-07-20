@@ -1,15 +1,23 @@
+
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { productService } from "@/services/productService";
 import ProductImageUpload from "@/components/products/ProductImageUpload";
+import ProductGalleryUpload from "@/components/products/ProductGalleryUpload";
 
 const emptyForm = {
   name: "",
+  description: "",
   price: "",
   oldPrice: "",
   image: "",
+  images: [],
   category: "",
+  brand: "",
+  sku: "",
+  tags: "",
   inStock: true,
   isNew: false,
 };
@@ -56,10 +64,15 @@ export default function AdminProductsPage() {
     setEditingId(product.id);
     setForm({
       name: product.name,
+      description: product.description || "",
       price: product.price,
       oldPrice: product.oldPrice ?? "",
       image: product.image,
+      images: product.images || [],
       category: product.categoryId ?? "",
+      brand: product.brand || "",
+      sku: product.sku || "",
+      tags: (product.tags || []).join(", "),
       inStock: product.inStock,
       isNew: product.isNew,
     });
@@ -94,10 +107,18 @@ export default function AdminProductsPage() {
 
     const payload = {
       name: form.name,
+      description: form.description,
       price: Number(form.price),
       oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
       image: form.image,
-      category: form.category, // هلأ هاي _id التصنيف مش نص حر
+      images: form.images,
+      category: form.category,
+      brand: form.brand,
+      sku: form.sku ? form.sku : undefined,
+      tags: form.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
       inStock: form.inStock,
       isNew: form.isNew,
     };
@@ -241,8 +262,8 @@ export default function AdminProductsPage() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-lg border border-[#2a251f] bg-[#211c17] p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 p-4">
+          <div className="my-8 w-full max-w-lg rounded-lg border border-[#2a251f] bg-[#211c17] p-6">
             <h2 className="mb-4 font-display text-xl text-[#f2ede4]">
               {editingId ? "تعديل منتج" : "منتج جديد"}
             </h2>
@@ -256,6 +277,18 @@ export default function AdminProductsPage() {
                   required
                   value={form.name}
                   onChange={(e) => handleChange("name", e.target.value)}
+                  className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                  الوصف (اختياري)
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  rows={3}
                   className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
                 />
               </div>
@@ -290,13 +323,58 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                    الماركة (اختياري)
+                  </label>
+                  <input
+                    value={form.brand}
+                    onChange={(e) => handleChange("brand", e.target.value)}
+                    className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                    رمز المنتج SKU (اختياري)
+                  </label>
+                  <input
+                    value={form.sku}
+                    onChange={(e) => handleChange("sku", e.target.value)}
+                    className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="mb-1 block font-body text-xs text-[#a9a196]">
-                  صورة المنتج
+                  الوسوم (افصل بينها بفاصلة، اختياري)
+                </label>
+                <input
+                  value={form.tags}
+                  onChange={(e) => handleChange("tags", e.target.value)}
+                  placeholder="مثلاً: صيفي, قطن, رجالي"
+                  className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                  صورة الغلاف (تظهر بالقوائم والبطاقات)
                 </label>
                 <ProductImageUpload
                   value={form.image}
                   onChange={(url) => handleChange("image", url)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                  معرض صور إضافي (اختياري)
+                </label>
+                <ProductGalleryUpload
+                  value={form.images}
+                  onChange={(images) => handleChange("images", images)}
                 />
               </div>
 

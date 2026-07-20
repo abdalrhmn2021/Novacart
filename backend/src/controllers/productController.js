@@ -1,5 +1,3 @@
-
-
 const Product = require("../models/Product");
 
 function generateSlug(name) {
@@ -22,6 +20,7 @@ const createProduct = async (req, res) => {
       brand,
       sku,
       image,
+      images,
       inStock,
       isNew,
       tags,
@@ -38,6 +37,7 @@ const createProduct = async (req, res) => {
       brand,
       sku,
       image,
+      images,
       inStock,
       isNew,
       tags,

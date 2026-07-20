@@ -1,5 +1,4 @@
-import api from "@/services/api"; // عدّل المسار حسب مكان ملف api عندك
-
+import api from "@/services/api";
 import { getCategories as fetchCategories } from "@/services/category.service";
 
 export async function getTopProducts() {
@@ -18,16 +17,23 @@ export async function getTopProducts() {
 }
 
 function normalizeProduct(raw) {
+  const mainImage =
+    raw.image ?? raw.thumbnail ?? raw.images?.[0] ?? "/images/placeholder.png";
+
   return {
     id: raw.id ?? raw._id,
     name: raw.name ?? raw.title ?? "",
     price: Number(raw.price ?? 0),
     oldPrice: raw.oldPrice ?? raw.compareAtPrice ?? null,
-    image:
-      raw.image ??
-      raw.thumbnail ??
-      raw.images?.[0] ??
-      "/images/placeholder.png",
+    image: mainImage,
+    images:
+      Array.isArray(raw.images) && raw.images.length > 0
+        ? raw.images
+        : [mainImage],
+    description: raw.description ?? "",
+    brand: raw.brand ?? "",
+    sku: raw.sku ?? "",
+    tags: Array.isArray(raw.tags) ? raw.tags : [],
     category: raw.category?.name ?? raw.category ?? "عام",
     categoryId: raw.category?._id ?? raw.category?.id ?? raw.categoryId ?? null,
     rating: raw.rating ?? 0,
