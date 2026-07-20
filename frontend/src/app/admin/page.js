@@ -1,3 +1,5 @@
+// ضع هذا الملف مكان: frontend/src/app/admin/page.js (استبدال كامل)
+
 "use client";
 
 import Link from "next/link";
@@ -47,6 +49,18 @@ export default function AdminDashboardPage() {
             </h2>
             <p className="mt-2 font-body text-sm text-[#a9a196]">
               إدارة الحسابات والصلاحيات
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/categories"
+            className="group rounded-lg border border-[#2a251f] bg-[#211c17] p-6 transition-colors hover:border-[#c69749]/50"
+          >
+            <h2 className="font-display text-xl text-[#f2ede4] group-hover:text-[#c69749]">
+              التصنيفات
+            </h2>
+            <p className="mt-2 font-body text-sm text-[#a9a196]">
+              إضافة وتعديل تصنيفات المنتجات
             </p>
           </Link>
         </div>

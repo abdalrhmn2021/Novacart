@@ -1,15 +1,15 @@
 const Product = require("../models/Product");
 
+const Product = require("../models/Product");
+
 function generateSlug(name) {
   const base = name
     .toLowerCase()
     .trim()
-    .replace(/[^\u0600-\u06FFa-z0-9\s-]/g, "")
+    .replace(/[^؀-ۿa-z0-9\s-]/g, "")
     .replace(/\s+/g, "-");
   return `${base}-${Date.now().toString(36)}`;
-} 
-
-
+}
 
 const createProduct = async (req, res) => {
   try {
@@ -45,11 +45,13 @@ const createProduct = async (req, res) => {
     });
 
     const saved = await product.save();
+    await saved.populate("category", "name slug");
     res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
+
 // Get all products (with search, category filter, sort, pagination)
 const getProducts = async (req, res) => {
   try {
@@ -85,6 +87,7 @@ const getProducts = async (req, res) => {
     const total = await Product.countDocuments(filters);
 
     const products = await Product.find(filters)
+      .populate("category", "name slug")
       .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(limit);
@@ -103,7 +106,10 @@ const getProducts = async (req, res) => {
 // Get single product by id
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate(
+      "category",
+      "name slug",
+    );
     if (!product) return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (err) {
@@ -117,7 +123,7 @@ const updateProduct = async (req, res) => {
     const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    });
+    }).populate("category", "name slug");
     if (!updated) return res.status(404).json({ message: "Product not found" });
     res.json(updated);
   } catch (err) {
@@ -140,6 +146,7 @@ const deleteProduct = async (req, res) => {
 const getTopProducts = async (req, res) => {
   try {
     const products = await Product.find()
+      .populate("category", "name slug")
       .sort({ price: -1 }) // عدّلها لـ { rating: -1 } أو حقل مبيعات لو "الأعلى" يعني الأكثر مبيعًا/تقييمًا
       .limit(4);
 

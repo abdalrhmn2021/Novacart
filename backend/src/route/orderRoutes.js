@@ -1,10 +1,9 @@
+
+
 const express = require("express");
 const router = express.Router();
 
-const { protect , isAdmin } = require("../middleware/auth");
-const requireAdmin = require("../middleware/auth");
-const { /* ... */ updateOrderItems } = require("../controllers/orderController");
-
+const { protect, isAdmin } = require("../middleware/auth");
 const {
   createOrder,
   getOrderById,
@@ -13,6 +12,7 @@ const {
   deleteMyOrders,
   getMyOrders,
   getAllOrders,
+  updateOrderItems,
 } = require("../controllers/orderController");
 
 router.get("/", protect, getMyOrders);
@@ -25,9 +25,9 @@ router.get("/:id", protect, getOrderById);
 
 router.put("/:id", protect, isAdmin, updateOrder);
 
-router.delete("/:id", protect, deleteOrder); // شلت requireAdmin — المستخدم يقدر يحذف طلبه هو
+router.delete("/:id", protect, deleteOrder); // المستخدم يقدر يحذف طلبه هو (الكونترولر بيتحقق owner/admin)
 
-  
 router.post("/", protect, createOrder);
 router.put("/:id/items", protect, updateOrderItems);
+
 module.exports = router;

@@ -1,5 +1,7 @@
 import api from "@/services/api"; // عدّل المسار حسب مكان ملف api عندك
 
+import { getCategories as fetchCategories } from "@/services/category.service";
+
 export async function getTopProducts() {
   try {
     const res = await fetch("http://127.0.0.1:5000/api/products/top", {
@@ -15,8 +17,6 @@ export async function getTopProducts() {
   }
 }
 
-// عدّل هاي الدالة إذا أسماء الحقول عندك مختلفة (مثلاً title بدل name،
-// أو thumbnail بدل image، أو stock بدل inStock...)
 function normalizeProduct(raw) {
   return {
     id: raw.id ?? raw._id,
@@ -29,7 +29,7 @@ function normalizeProduct(raw) {
       raw.images?.[0] ??
       "/images/placeholder.png",
     category: raw.category?.name ?? raw.category ?? "عام",
-    categoryId: raw.category?.id ?? raw.categoryId ?? null,
+    categoryId: raw.category?._id ?? raw.category?.id ?? raw.categoryId ?? null,
     rating: raw.rating ?? 0,
     inStock: raw.inStock ?? (raw.stock ? raw.stock > 0 : true),
     isNew: raw.isNew ?? false,
@@ -73,9 +73,7 @@ export const productService = {
   },
 
   async getCategories() {
-    const data = await api.get("/categories");
-
-    const categories = data.categories ?? data;
+    const categories = await fetchCategories();
 
     return categories.map((c) => ({
       id: c._id ?? c.id,

@@ -1,21 +1,20 @@
+
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { productService } from "@/services/productService";
+import { categoryService } from "@/services/category.service";
 import ProductImageUpload from "@/components/products/ProductImageUpload";
 
 const emptyForm = {
   name: "",
-  price: "",
-  oldPrice: "",
+  description: "",
   image: "",
-  category: "",
-  inStock: true,
-  isNew: false,
+  sortOrder: 0,
+  isActive: true,
 };
 
-export default function AdminProductsPage() {
-  const [products, setProducts] = useState([]);
+export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,14 +25,14 @@ export default function AdminProductsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState(null);
 
-  const loadProducts = useCallback(async () => {
+  const loadCategories = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await productService.getProducts({ page: 1, limit: 100 });
-      setProducts(data.products);
+      const data = await categoryService.getCategories();
+      setCategories(data);
     } catch (err) {
-      setError(err.message || "تعذر تحميل المنتجات");
+      setError(err.message || "تعذر تحميل التصنيفات");
     } finally {
       setIsLoading(false);
     }
@@ -41,9 +40,8 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    loadProducts();
-    productService.getCategories().then(setCategories).catch(() => {});
-  }, [loadProducts]);
+    loadCategories();
+  }, [loadCategories]);
 
   const openCreateForm = () => {
     setEditingId(null);
@@ -52,16 +50,14 @@ export default function AdminProductsPage() {
     setShowForm(true);
   };
 
-  const openEditForm = (product) => {
-    setEditingId(product.id);
+  const openEditForm = (category) => {
+    setEditingId(category._id);
     setForm({
-      name: product.name,
-      price: product.price,
-      oldPrice: product.oldPrice ?? "",
-      image: product.image,
-      category: product.categoryId ?? "",
-      inStock: product.inStock,
-      isNew: product.isNew,
+      name: category.name,
+      description: category.description || "",
+      image: category.image || "",
+      sortOrder: category.sortOrder ?? 0,
+      isActive: category.isActive,
     });
     setFormError(null);
     setShowForm(true);
@@ -80,51 +76,40 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.image) {
-      setFormError("الرجاء رفع صورة للمنتج");
-      return;
-    }
-    if (!form.category) {
-      setFormError("الرجاء اختيار تصنيف للمنتج");
-      return;
-    }
-
     setIsSaving(true);
     setFormError(null);
 
     const payload = {
       name: form.name,
-      price: Number(form.price),
-      oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
+      description: form.description,
       image: form.image,
-      category: form.category, // هلأ هاي _id التصنيف مش نص حر
-      inStock: form.inStock,
-      isNew: form.isNew,
+      sortOrder: Number(form.sortOrder) || 0,
+      isActive: form.isActive,
     };
 
     try {
       if (editingId) {
-        await productService.updateProduct(editingId, payload);
+        await categoryService.updateCategory(editingId, payload);
       } else {
-        await productService.createProduct(payload);
+        await categoryService.createCategory(payload);
       }
       closeForm();
-      await loadProducts();
+      await loadCategories();
     } catch (err) {
-      setFormError(err.message || "تعذر حفظ المنتج");
+      setFormError(err.message || "تعذر حفظ التصنيف");
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = async (product) => {
-    if (!confirm(`متأكد إنك بدك تحذف "${product.name}"؟`)) return;
+  const handleDelete = async (category) => {
+    if (!confirm(`متأكد إنك بدك تحذف تصنيف "${category.name}"؟`)) return;
 
     try {
-      await productService.deleteProduct(product.id);
-      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      await categoryService.deleteCategory(category._id);
+      setCategories((prev) => prev.filter((c) => c._id !== category._id));
     } catch (err) {
-      alert(err.message || "تعذر حذف المنتج");
+      alert(err.message || "تعذر حذف التصنيف");
     }
   };
 
@@ -134,10 +119,10 @@ export default function AdminProductsPage() {
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="font-display text-3xl text-[#f2ede4]">
-              إدارة المنتجات
+              إدارة التصنيفات
             </h1>
             <p className="mt-1 font-body text-sm text-[#a9a196]">
-              {products.length} منتج
+              {categories.length} تصنيف
             </p>
           </div>
 
@@ -145,7 +130,7 @@ export default function AdminProductsPage() {
             onClick={openCreateForm}
             className="rounded-md bg-[#c69749] px-5 py-2.5 font-body text-sm text-[#1a1613] hover:bg-[#b08540]"
           >
-            + منتج جديد
+            + تصنيف جديد
           </button>
         </header>
 
@@ -170,13 +155,10 @@ export default function AdminProductsPage() {
               <thead className="bg-[#211c17]">
                 <tr>
                   <th className="p-4 font-body text-xs text-[#a9a196]">
-                    المنتج
-                  </th>
-                  <th className="p-4 font-body text-xs text-[#a9a196]">
                     التصنيف
                   </th>
                   <th className="p-4 font-body text-xs text-[#a9a196]">
-                    السعر
+                    الترتيب
                   </th>
                   <th className="p-4 font-body text-xs text-[#a9a196]">
                     الحالة
@@ -185,42 +167,43 @@ export default function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-t border-[#2a251f]">
+                {categories.map((category) => (
+                  <tr key={category._id} className="border-t border-[#2a251f]">
                     <td className="flex items-center gap-3 p-4">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="h-10 w-10 rounded-md object-cover"
-                      />
+                      {category.image && (
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className="h-10 w-10 rounded-md object-cover"
+                        />
+                      )}
                       <span className="font-body text-sm text-[#f2ede4]">
-                        {product.name}
+                        {category.name}
                       </span>
                     </td>
                     <td className="p-4 font-body text-sm text-[#a9a196]">
-                      {product.category}
-                    </td>
-                    <td className="p-4 font-display text-sm text-[#c69749]">
-                      {product.price.toLocaleString("ar")} ₪
+                      {category.sortOrder}
                     </td>
                     <td className="p-4 font-body text-xs">
                       <span
                         className={
-                          product.inStock ? "text-[#8fae7c]" : "text-[#c96a5a]"
+                          category.isActive
+                            ? "text-[#8fae7c]"
+                            : "text-[#c96a5a]"
                         }
                       >
-                        {product.inStock ? "متوفر" : "نفدت الكمية"}
+                        {category.isActive ? "فعّال" : "غير فعّال"}
                       </span>
                     </td>
                     <td className="space-x-2 space-x-reverse p-4 text-left">
                       <button
-                        onClick={() => openEditForm(product)}
+                        onClick={() => openEditForm(category)}
                         className="rounded-md border border-[#3a342c] px-3 py-1.5 font-body text-xs text-[#a9a196] hover:border-[#c69749]/50"
                       >
                         تعديل
                       </button>
                       <button
-                        onClick={() => handleDelete(product)}
+                        onClick={() => handleDelete(category)}
                         className="rounded-md border border-[#c96a5a]/40 px-3 py-1.5 font-body text-xs text-[#c96a5a] hover:bg-[#c96a5a]/10"
                       >
                         حذف
@@ -231,9 +214,9 @@ export default function AdminProductsPage() {
               </tbody>
             </table>
 
-            {products.length === 0 && (
+            {categories.length === 0 && (
               <p className="p-8 text-center font-body text-sm text-[#a9a196]">
-                ما في منتجات بعد
+                ما في تصنيفات بعد
               </p>
             )}
           </div>
@@ -244,7 +227,7 @@ export default function AdminProductsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-lg rounded-lg border border-[#2a251f] bg-[#211c17] p-6">
             <h2 className="mb-4 font-display text-xl text-[#f2ede4]">
-              {editingId ? "تعديل منتج" : "منتج جديد"}
+              {editingId ? "تعديل تصنيف" : "تصنيف جديد"}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -260,39 +243,21 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block font-body text-xs text-[#a9a196]">
-                    السعر
-                  </label>
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.price}
-                    onChange={(e) => handleChange("price", e.target.value)}
-                    className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block font-body text-xs text-[#a9a196]">
-                    السعر قبل الخصم (اختياري)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.oldPrice}
-                    onChange={(e) => handleChange("oldPrice", e.target.value)}
-                    className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
-                  />
-                </div>
+              <div>
+                <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                  الوصف (اختياري)
+                </label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => handleChange("description", e.target.value)}
+                  rows={2}
+                  className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                />
               </div>
 
               <div>
                 <label className="mb-1 block font-body text-xs text-[#a9a196]">
-                  صورة المنتج
+                  صورة التصنيف (اختياري)
                 </label>
                 <ProductImageUpload
                   value={form.image}
@@ -300,49 +265,25 @@ export default function AdminProductsPage() {
                 />
               </div>
 
-              <div>
-                <label className="mb-1 block font-body text-xs text-[#a9a196]">
-                  التصنيف
-                </label>
-                <select
-                  required
-                  value={form.category}
-                  onChange={(e) => handleChange("category", e.target.value)}
-                  className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
-                >
-                  <option value="" disabled>
-                    اختر تصنيف...
-                  </option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {categories.length === 0 && (
-                  <p className="mt-1 font-body text-xs text-[#c96a5a]">
-                    ما في تصنيفات بعد — أضف تصنيف واحد على الأقل من صفحة
-                    إدارة التصنيفات قبل ما تضيف منتج.
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-6 pt-1">
-                <label className="flex items-center gap-2 font-body text-sm text-[#a9a196]">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                    الترتيب
+                  </label>
+                  <input
+                    type="number"
+                    value={form.sortOrder}
+                    onChange={(e) => handleChange("sortOrder", e.target.value)}
+                    className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                  />
+                </div>
+                <label className="flex items-center gap-2 self-end pb-2 font-body text-sm text-[#a9a196]">
                   <input
                     type="checkbox"
-                    checked={form.inStock}
-                    onChange={(e) => handleChange("inStock", e.target.checked)}
+                    checked={form.isActive}
+                    onChange={(e) => handleChange("isActive", e.target.checked)}
                   />
-                  متوفر بالمخزون
-                </label>
-                <label className="flex items-center gap-2 font-body text-sm text-[#a9a196]">
-                  <input
-                    type="checkbox"
-                    checked={form.isNew}
-                    onChange={(e) => handleChange("isNew", e.target.checked)}
-                  />
-                  منتج جديد
+                  فعّال
                 </label>
               </div>
 
