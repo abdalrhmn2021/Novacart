@@ -14,6 +14,7 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [added, setAdded] = useState(false);
@@ -28,7 +29,10 @@ export default function ProductPage() {
     productService
       .getProductById(id)
       .then((data) => {
-        if (isMounted) setProduct(data);
+        if (isMounted) {
+          setProduct(data);
+          setActiveImage(0);
+        }
       })
       .catch((err) => {
         if (isMounted) setError(err.message || "تعذر تحميل المنتج");
@@ -84,23 +88,63 @@ export default function ProductPage() {
     );
   }
 
+  const gallery = product.images && product.images.length > 0
+    ? product.images
+    : [product.image];
+
+  const specs = [
+    { label: "التصنيف", value: product.category },
+    { label: "الماركة", value: product.brand },
+    { label: "رمز المنتج (SKU)", value: product.sku },
+    {
+      label: "الوسوم",
+      value: product.tags && product.tags.length > 0 ? product.tags.join("، ") : "",
+    },
+  ].filter((spec) => spec.value);
+
   return (
     <main dir="rtl" className="min-h-screen bg-[#1a1613] px-4 py-10 md:px-10">
       <div className="mx-auto max-w-5xl">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-          {/* صورة المنتج */}
-          <div className="relative aspect-square overflow-hidden rounded-xl bg-[#241f1a]">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
-            {product.isNew && (
-              <span className="absolute right-3 top-3 rounded-full bg-[#c69749] px-3 py-1 font-body text-xs text-[#1a1613]">
-                جديد
-              </span>
+          {/* صورة المنتج + المعرض */}
+          <div>
+            <div className="relative aspect-square overflow-hidden rounded-xl bg-[#241f1a]">
+              <Image
+                src={gallery[activeImage]}
+                alt={product.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+              {product.isNew && (
+                <span className="absolute right-3 top-3 rounded-full bg-[#c69749] px-3 py-1 font-body text-xs text-[#1a1613]">
+                  جديد
+                </span>
+              )}
+            </div>
+
+            {gallery.length > 1 && (
+              <div className="mt-3 flex gap-2 overflow-x-auto">
+                {gallery.map((img, i) => (
+                  <button
+                    key={`${img}-${i}`}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border transition-colors ${
+                      i === activeImage
+                        ? "border-[#c69749]"
+                        : "border-[#2a251f] hover:border-[#3a342c]"
+                    }`}
+                  >
+                    <Image
+                      src={img}
+                      alt={`${product.name} - صورة ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -138,7 +182,28 @@ export default function ProductPage() {
               </p>
             )}
 
-            {/* اختيار الكمية */}
+            {specs.length > 0 && (
+              <div className="mt-6 overflow-hidden rounded-lg border border-[#2a251f]">
+                <table className="w-full text-right">
+                  <tbody>
+                    {specs.map((spec, i) => (
+                      <tr
+                        key={spec.label}
+                        className={i > 0 ? "border-t border-[#2a251f]" : ""}
+                      >
+                        <td className="w-1/3 bg-[#211c17] p-3 font-body text-xs text-[#a9a196]">
+                          {spec.label}
+                        </td>
+                        <td className="p-3 font-body text-sm text-[#f2ede4]">
+                          {spec.value}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <div className="mt-8 flex items-center gap-3">
               <span className="font-body text-sm text-[#a9a196]">الكمية</span>
               <div className="flex items-center rounded-md border border-[#3a342c]">
@@ -160,7 +225,6 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* زر الإضافة للسلة */}
             <button
               onClick={handleAddToCart}
               disabled={!product.inStock}
