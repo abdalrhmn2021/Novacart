@@ -48,7 +48,6 @@ Novacart/
 ### 1) الباك اند
  
 ```bash
-cd backend
 npm install
 cp .env.example .env   # ثم عبّي القيم الحقيقية بملف .env
 npm run dev
