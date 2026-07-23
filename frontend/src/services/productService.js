@@ -7,13 +7,19 @@ export async function getTopProducts() {
       `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products/top`,
       {
         cache: "no-store",
+        signal: AbortSignal.timeout(15000),
       },
     );
+
+    if (!res.ok) {
+      console.log("FETCH ERROR: bad status", res.status);
+      return [];
+    }
 
     return await res.json();
   } catch (error) {
     console.log("FETCH ERROR:", error);
-    throw error;
+    return [];
   }
 }
 
