@@ -10,7 +10,6 @@ export default function ProductFilters({
   search,
   onSearchChange,
 }) {
-  console.log("categories =>", categories);
   return (
     <div className="flex flex-col gap-4 border-b border-[#2a251f] pb-6 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-wrap gap-2">

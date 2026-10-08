@@ -5,11 +5,18 @@ const { generateToken } = require("../utils/generateToken");
 
 const register = async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, password } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         message: "First name, last name, email and password are required.",
+      });
+    }
+
+    if (String(password).length < 8) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters.",
       });
     }
 
@@ -37,10 +44,10 @@ const register = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 3 * 24 * 60 * 60 * 1000, // same lifetime as the JWT
     });
 
-    return res.status(200).json({
+    return res.status(201).json({
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -59,7 +66,8 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = String(req.body.email || "").trim().toLowerCase();
 
     if (!email || !password) {
       return res.status(400).json({
@@ -89,7 +97,7 @@ const login = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      maxAge: 3 * 24 * 60 * 60 * 1000, // same lifetime as the JWT
     });
 
     return res.status(200).json({

@@ -19,6 +19,7 @@ const emptyForm = {
   sku: "",
   tags: "",
   inStock: true,
+  stock: "",
   isNew: false,
 };
 
@@ -74,6 +75,7 @@ export default function AdminProductsPage() {
       sku: product.sku || "",
       tags: (product.tags || []).join(", "),
       inStock: product.inStock,
+      stock: product.stock ?? "",
       isNew: product.isNew,
     });
     setFormError(null);
@@ -120,6 +122,7 @@ export default function AdminProductsPage() {
         .map((t) => t.trim())
         .filter(Boolean),
       inStock: form.inStock,
+      stock: form.stock === "" ? null : Number(form.stock),
       isNew: form.isNew,
     };
 
@@ -405,11 +408,26 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
+              <div>
+                <label className="mb-1 block font-body text-xs text-[#a9a196]">
+                  الكمية بالمخزون (اختياري — اتركها فارغة لعدم تتبع الكمية)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.stock}
+                  onChange={(e) => handleChange("stock", e.target.value)}
+                  className="w-full rounded-md border border-[#3a342c] bg-[#1a1613] px-3 py-2 font-body text-sm text-[#f2ede4] outline-none focus:border-[#c69749]"
+                />
+              </div>
+
               <div className="flex items-center gap-6 pt-1">
                 <label className="flex items-center gap-2 font-body text-sm text-[#a9a196]">
                   <input
                     type="checkbox"
-                    checked={form.inStock}
+                    disabled={form.stock !== ""}
+                    checked={form.stock !== "" ? Number(form.stock) > 0 : form.inStock}
                     onChange={(e) => handleChange("inStock", e.target.checked)}
                   />
                   متوفر بالمخزون

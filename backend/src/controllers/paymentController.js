@@ -1,23 +1,33 @@
 const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const Order = require("../models/Order");
+const Product = require("../models/Product");
+const { HttpError, assertAvailable, decrementStock } = require("../utils/stock");
 
 const createCheckoutSession = async (req, res) => {
   try {
     const { orderId } = req.body;
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).catch(() => null);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // تحقق إن الطلب يخص نفس المستخدم المسجل دخول
     if (order.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "غير مسموح لك بدفع هذا الطلب" });
     }
 
     if (order.paymentStatus === "paid") {
       return res.status(400).json({ message: "هذا الطلب مدفوع أصلاً" });
+    }
+
+    // Stock may have changed since the order was created: check again before charging.
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        throw new HttpError(400, `المنتج لم يعد متوفراً: ${item.name}`);
+      }
+      assertAvailable(product, item.quantity);
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -44,7 +54,11 @@ const createCheckoutSession = async (req, res) => {
 
     res.json({ url: session.url });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    if (error instanceof HttpError) {
+      return res.status(error.status).json({ message: error.message });
+    }
+    console.error(error);
+    res.status(500).json({ message: "تعذر إنشاء جلسة الدفع" });
   }
 };
 
@@ -56,22 +70,36 @@ const stripeWebhook = async (req, res) => {
     event = stripe.webhooks.constructEvent(
       req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      process.env.STRIPE_WEBHOOK_SECRET,
     );
   } catch (error) {
     return res.status(400).send(`Webhook Error: ${error.message}`);
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    await Order.findByIdAndUpdate(session.metadata.orderId, {
-      paymentStatus: "paid",
-      status: "processing",
-      paidAt: new Date(),
-    });
-  }
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
 
-  res.json({ received: true });
+      // Stripe can deliver the same event more than once. The filter on
+      // paymentStatus makes this update happen only the first time, so stock
+      // is decremented exactly once per order.
+      const order = await Order.findOneAndUpdate(
+        { _id: session.metadata.orderId, paymentStatus: { $ne: "paid" } },
+        { paymentStatus: "paid", status: "processing", paidAt: new Date() },
+        { new: true },
+      );
+
+      if (order) {
+        await decrementStock(order.items);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (error) {
+    // A 500 makes Stripe retry the event later.
+    console.error("Webhook handling failed:", error);
+    res.status(500).json({ message: "Webhook handling failed" });
+  }
 };
 
 module.exports = { createCheckoutSession, stripeWebhook };

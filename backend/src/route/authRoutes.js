@@ -3,7 +3,6 @@ const router = express.Router();
 
 const authController = require("../controllers/authController");
 
-console.log("AUTH CONTROLLER =>", authController);
 
 const { protect } = require("../middleware/auth");
 
@@ -13,4 +12,4 @@ router.post("/logout", authController.logout);
 router.post("/refresh-token", authController.refreshToken);
 router.get("/verify", protect, authController.verify);
 
-module.exports = router;
+module.exports = router;

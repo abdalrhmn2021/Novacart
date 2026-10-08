@@ -1,7 +1,3 @@
-// ضع هذا الملف مكان: backend/src/route/categoryRoutes.js
-// الفرق عن نسختك الحالية: أضفنا protect + isAdmin على عمليات الإنشاء/التعديل/الحذف
-// (كانت هذه الراوتات مفتوحة لأي شخص بدون تسجيل دخول - ثغرة أمنية)
-
 const express = require("express");
 const router = express.Router();
 

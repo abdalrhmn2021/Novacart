@@ -1,9 +1,13 @@
+const mongoose = require("mongoose");
 const Review = require("../models/Review");
 const Product = require("../models/Product");
 
 async function recalcProductRating(productId) {
+  // aggregate() does not cast types like find() does, so a string id would
+  // match nothing. Always convert to an ObjectId first.
+  const id = new mongoose.Types.ObjectId(String(productId));
   const stats = await Review.aggregate([
-    { $match: { product: productId } },
+    { $match: { product: id } },
     {
       $group: {
         _id: "$product",
@@ -53,7 +57,9 @@ const createReview = async (req, res) => {
       return res.status(400).json({ message: "التقييم لازم يكون بين 1 و 5" });
     }
 
-    const product = await Product.findById(productId);
+    const product = mongoose.isValidObjectId(productId)
+      ? await Product.findById(productId)
+      : null;
     if (!product) {
       return res.status(404).json({ message: "المنتج غير موجود" });
     }
@@ -120,4 +126,4 @@ const deleteReview = async (req, res) => {
   }
 };
 
-module.exports = { getProductReviews, createReview, deleteReview };
+module.exports = { getProductReviews, createReview, deleteReview };

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import userService from "@/services/userService";
-import UsersTable from "@/app/admin/userTamlets";
+import UsersTable from "@/components/admin/UsersTable";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);

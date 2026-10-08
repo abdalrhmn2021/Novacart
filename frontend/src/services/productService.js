@@ -4,7 +4,8 @@ import { getCategories as fetchCategories } from "@/services/category.service";
 export async function getTopProducts() {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/products/top`,
+      // Runs on the server, so it calls the backend directly
+      `${process.env.API_URL || "http://localhost:5000"}/api/products/top`,
       {
         cache: "no-store",
         signal: AbortSignal.timeout(15000),
@@ -12,13 +13,13 @@ export async function getTopProducts() {
     );
 
     if (!res.ok) {
-      console.log("FETCH ERROR: bad status", res.status);
+      console.error("getTopProducts failed with status", res.status);
       return [];
     }
 
     return await res.json();
   } catch (error) {
-    console.log("FETCH ERROR:", error);
+    console.error("getTopProducts failed:", error.message);
     return [];
   }
 }
@@ -44,7 +45,9 @@ function normalizeProduct(raw) {
     category: raw.category?.name ?? raw.category ?? "عام",
     categoryId: raw.category?._id ?? raw.category?.id ?? raw.categoryId ?? null,
     rating: raw.rating ?? 0,
-    inStock: raw.inStock ?? (raw.stock ? raw.stock > 0 : true),
+    stock: typeof raw.stock === "number" ? raw.stock : null,
+    inStock:
+      raw.inStock ?? (typeof raw.stock === "number" ? raw.stock > 0 : true),
     isNew: raw.isNew ?? false,
   };
 }

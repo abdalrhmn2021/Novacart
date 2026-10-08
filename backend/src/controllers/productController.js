@@ -1,5 +1,27 @@
 const Product = require("../models/Product");
 
+// Normalizes the optional stock field. When stock is tracked, inStock follows it.
+function applyStockRules(data) {
+  if (data.stock === undefined) return data;
+  if (data.stock === null || data.stock === "") {
+    data.stock = null;
+    return data;
+  }
+  const stock = Number(data.stock);
+  if (!Number.isInteger(stock) || stock < 0) {
+    const error = new Error("الكمية يجب أن تكون رقماً صحيحاً 0 أو أكثر");
+    error.status = 400;
+    throw error;
+  }
+  data.stock = stock;
+  data.inStock = stock > 0;
+  return data;
+}
+
+function escapeRegex(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function generateSlug(name) {
   const base = name
     .toLowerCase()
@@ -22,12 +44,13 @@ const createProduct = async (req, res) => {
       image,
       images,
       inStock,
+      stock,
       isNew,
       tags,
       isActive,
     } = req.body;
 
-    const product = new Product({
+    const product = new Product(applyStockRules({
       name,
       slug: generateSlug(name),
       description,
@@ -39,10 +62,11 @@ const createProduct = async (req, res) => {
       image,
       images,
       inStock,
+      stock,
       isNew,
       tags,
       isActive,
-    });
+    }));
 
     const saved = await product.save();
     await saved.populate("category", "name slug");
@@ -56,7 +80,7 @@ const createProduct = async (req, res) => {
 const getProducts = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 12;
+    const limit = Math.min(Number(req.query.limit) || 12, 50);
 
     const filters = {};
 
@@ -65,7 +89,7 @@ const getProducts = async (req, res) => {
     }
 
     if (req.query.search) {
-      filters.name = { $regex: req.query.search, $options: "i" };
+      filters.name = { $regex: escapeRegex(req.query.search), $options: "i" };
     }
 
     let sortOption = { createdAt: -1 }; // newest كافتراضي
@@ -120,7 +144,12 @@ const getProductById = async (req, res) => {
 // Update a product by id
 const updateProduct = async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const updates = applyStockRules({ ...req.body });
+    // Computed fields are maintained by the server only.
+    delete updates.averageRating;
+    delete updates.numReviews;
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
     }).populate("category", "name slug");

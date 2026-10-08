@@ -1,5 +1,3 @@
-// ضع هذا الملف مكان: frontend/src/app/admin/page.js (استبدال كامل)
-
 "use client";
 
 import Link from "next/link";

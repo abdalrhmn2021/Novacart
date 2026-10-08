@@ -19,13 +19,14 @@ router.get("/", protect, getMyOrders);
 
 router.get("/admin", protect, isAdmin, getAllOrders);
 
-router.delete("/", protect, deleteMyOrders); // حذف كل طلبات المستخدم الحالي
+router.delete("/", protect, deleteMyOrders); // current user's unpaid orders
 
 router.get("/:id", protect, getOrderById);
 
 router.put("/:id", protect, isAdmin, updateOrder);
+router.put("/:id/status", protect, isAdmin, updateOrder);
 
-router.delete("/:id", protect, deleteOrder); // المستخدم يقدر يحذف طلبه هو (الكونترولر بيتحقق owner/admin)
+router.delete("/:id", protect, deleteOrder); // owner (unpaid only) or admin
 
 router.post("/", protect, createOrder);
 router.put("/:id/items", protect, updateOrderItems);

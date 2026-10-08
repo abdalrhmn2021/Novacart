@@ -22,7 +22,7 @@ export default async function TopProducts() {
             {/* الصورة */}
             <div className="relative h-48 overflow-hidden">
               <img
-                src={"/a.png"}
+                src={product.image || "/a.png"}
                 alt={product.name}
                 className="
                   h-full w-full object-cover
@@ -40,7 +40,7 @@ export default async function TopProducts() {
                   shadow-md
                 "
               >
-                ${product.price}
+                {product.price.toLocaleString("ar")} ₪
               </span>
             </div>
 
@@ -58,7 +58,7 @@ export default async function TopProducts() {
 
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-lg font-bold text-[#c69749]">
-                  ${product.price}
+                  {product.price.toLocaleString("ar")} ₪
                 </span>
 
                 <span
@@ -79,4 +79,4 @@ export default async function TopProducts() {
       </div>
     </section>
   );
-}
+}

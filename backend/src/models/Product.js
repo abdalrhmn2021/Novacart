@@ -55,6 +55,12 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Quantity in stock. null = not tracked (availability uses inStock only).
+    stock: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
     isNew: {
       type: Boolean,
       default: false,

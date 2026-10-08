@@ -1,5 +1,3 @@
-<!-- ضع هذا الملف بجذر المشروع: README.md (نفس مستوى backend/ وfrontend/) -->
- 
 # Novacart
  
 متجر إلكتروني كامل (full-stack) مبني بـ Express.js / MongoDB بالباك اند، وNext.js / React بالفرونت اند.
@@ -11,6 +9,8 @@
 - سلة تسوق وطلبات، مع دفع إلكتروني عبر Stripe Checkout
 - رفع صور المنتجات عبر Cloudinary
 - تقييمات ومراجعات للمنتجات (Reviews) مع حساب متوسط تلقائي
+- إدارة مخزون: الكمية تُفحص عند إنشاء الطلب وقبل الدفع، وتُخصم تلقائياً بعد نجاح الدفع
+- الأسعار تُحسب دائماً من قاعدة البيانات، وليس من المتصفح
 ## التقنيات المستخدمة
  
 **الباك اند:** Express.js، Mongoose (MongoDB)، JWT، bcrypt، Stripe، Cloudinary
@@ -48,6 +48,7 @@ Novacart/
 ### 1) الباك اند
  
 ```bash
+cd backend
 npm install
 cp .env.example .env   # ثم عبّي القيم الحقيقية بملف .env
 npm run dev
@@ -68,9 +69,20 @@ npm run dev
  
 ### 3) صلاحية الأدمن
  
-ما في حالياً واجهة لترقية مستخدم لـ admin. بعد ما تسجل حساب عادي، روح على قاعدة البيانات (MongoDB Compass أو Atlas) لمجموعة `users`، ولاقي المستخدم، وغيّر حقل `role` من `user` إلى `admin` يدوياً. بعدها رح تظهرلك لوحة التحكم `/admin`.
+كل حساب جديد يُنشأ بصلاحية `user`. لأول أدمن فقط: بعد ما تسجل حساب عادي، افتح قاعدة البيانات (MongoDB Compass أو Atlas)، وبمجموعة `users` غيّر حقل `role` للمستخدم إلى `admin`. بعدها بتقدر تدير صلاحيات باقي المستخدمين من لوحة التحكم `/admin/users`.
  
 ## ملاحظات مهمة
  
 - متغيرات البيئة (`.env`, `.env.local`) غير مرفوعة على GitHub لأسباب أمنية — استخدم ملفات `.env.example` كمرجع فقط.
 - Stripe webhook (`/api/payment/webhook`) لازم يكون قابل للوصول من الإنترنت وقت الاختبار — استخدم [Stripe CLI](https://stripe.com/docs/stripe-cli) (`stripe listen --forward-to localhost:5000/api/payment/webhook`) للتجربة المحلية.
+
+## النشر (Deployment)
+
+| الجزء | المكان | الإعدادات |
+| --- | --- | --- |
+| الباك اند | Render | متغيرات `backend/.env.example`، و`FRONTEND_URL` = رابط الفرونت اند |
+| الفرونت اند | Vercel | Root directory: `frontend`، و`API_URL` = رابط الباك اند **بدون** `/api` |
+
+الفرونت اند يمرّر كل طلبات `/api/*` للباك اند عبر `rewrites` في `next.config.mjs`. هيك كوكي تسجيل الدخول بتنحفظ على نفس دومين الموقع، وما بيرفضها المتصفح كـ third-party cookie.
+
+رابط Stripe webhook بيكون على الباك اند مباشرة: `https://<backend>/api/payment/webhook`.

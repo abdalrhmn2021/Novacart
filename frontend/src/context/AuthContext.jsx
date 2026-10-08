@@ -38,8 +38,8 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       await api.post("/auth/logout");
-    } catch (error) {
-      console.log(error.message);
+    } catch {
+      // Logging out locally even if the request fails
     }
 
     setUser(null);
@@ -72,4 +72,4 @@ export function useAuth() {
   }
 
   return context;
-}
+}

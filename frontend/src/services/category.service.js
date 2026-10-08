@@ -1,7 +1,3 @@
-// ضع هذا الملف مكان: frontend/src/services/category.service.js
-// نسختك الحالية فيها getCategories بس. أضفنا باقي عمليات الـ CRUD
-// عشان تقدر تبني عليها صفحة إدارة الكاتيجوري بلوحة التحكم.
-
 import api from "./api";
 
 export const getCategories = async () => {
